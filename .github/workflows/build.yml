@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: 编译验证（无需签名证书）
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 显示工具链版本
+        run: |
+          sw_vers
+          swiftc --version
+
+      - name: 编译并组装 App 包（不安装）
+        # --build-only 不会写 /Applications，也不会启动任何进程 —— CI 里安全
+        run: ./安装器.app/Contents/MacOS/Installer --build-only
+
+      - name: 校验产物结构
+        run: |
+          set -e
+          APP=build/VideoWallpaper.app
+          test -x "$APP/Contents/MacOS/VideoWallpaper"   || { echo "缺少可执行文件"; exit 1; }
+          test -f "$APP/Contents/Info.plist"             || { echo "缺少 Info.plist"; exit 1; }
+          test -f "$APP/Contents/Resources/AppIcon.icns" || { echo "缺少图标"; exit 1; }
+          plutil -lint "$APP/Contents/Info.plist"
+          echo "✓ 产物结构正确"
+          du -sh "$APP"
+
+      - name: 校验 Info.plist 关键项
+        run: |
+          set -e
+          APP=build/VideoWallpaper.app
+          test "$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' "$APP/Contents/Info.plist")" = "true" \
+            || { echo "LSUIElement 必须为 true（否则会在 Dock 占位）"; exit 1; }
+          echo "✓ LSUIElement 正确"
+
+      - name: 上传构建日志（失败时排查用）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build/build.log
+          if-no-files-found: ignore

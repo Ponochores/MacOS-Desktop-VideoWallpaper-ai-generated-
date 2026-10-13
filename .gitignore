@@ -1,0 +1,29 @@
+# 编译产物与运行日志
+build/
+*.o
+*.dSYM
+
+# 安装器的编译产物（仓库只保留源码；安装器.app/README-先读我.txt 里写了怎么编译）
+安装器.app/Contents/MacOS/Installer
+安装器.app/Contents/_CodeSignature/
+
+# macOS 系统垃圾
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# 编辑器 / IDE
+.vscode/
+.idea/
+xcuserdata/
+*.xcuserstate
+
+# 本地临时验证文件
+*.log
+
+# 不要把用户自己的视频提交进来
+# （示例视频在 Resources/default.mp4，这里只挡仓库根目录下的散装视频）
+/*.mp4
+/*.mov
+/*.m4v
